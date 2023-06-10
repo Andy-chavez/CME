@@ -1,5 +1,5 @@
 # CME
-Proyect for Data Engineering course
+Proyect for Data Engineering course, retrieve of Coronal Mass Ejection data from NASA API
 
 ## Steps
 1. Run "tableCreation.sql" after connecting to Redshift database
