@@ -1,5 +1,5 @@
 # CME
-Proyect for Data Engineering course
+Proyect for Data Engineering course, retrieve of Coronal Mass Ejection data from NASA API
 
 ## Steps
 1. Create an .env file with the following structure:
