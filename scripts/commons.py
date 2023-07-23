@@ -52,11 +52,8 @@ class ETL_Spark:
         except:
             print(">>> Connection to Redshift failed")
 
-    def execute(self, process_date: str):
-        """
-        Args:
-            process_date (str): date in format YYYY-MM-DD
-        """
+    def execute(self):
+
         print(">>> [execute] Ejecutando ETL...")
 
         # Extract

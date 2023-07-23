@@ -14,8 +14,7 @@ class ETL_CME(ETL_Spark):
         self.process_date = datetime.now().strftime("%Y-%m-%d")
 
     def run(self):
-        process_date = datetime.now().strftime("%Y-%m-%d")
-        self.execute(process_date)
+        self.execute()
 
     def extract(self):
         print(">>> Extracting data:")
@@ -72,9 +71,6 @@ class ETL_CME(ETL_Spark):
 
     def load(self, df_final):
         print(">>> Loading data into redshift:")
-
-        # add process_date column
-        df_final = df_final.withColumn("process_date", lit(self.process_date))
 
         df_final.write \
             .format("jdbc") \
