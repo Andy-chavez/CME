@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from os import environ as env
 
 from pyspark.sql.functions import col, lit, udf, substring
-from pyspark.sql.types import StringType
+from pyspark.sql.types import StringType, FloatType, BooleanType, StructType, StructField
 
 from commons import ETL_Spark
 
@@ -26,8 +26,6 @@ class ETL_CME(ETL_Spark):
             "%Y-%m-%d"
         )  # look for info uploaded during previous week
 
-        print(date)
-        print(week)
         apiCall = (
             "https://api.nasa.gov/DONKI/CMEAnalysis?startDate="
             + week
@@ -45,8 +43,24 @@ class ETL_CME(ETL_Spark):
         else:
             data = []
             raise Exception(f"Error retrieving data, status code: {result.status_code}")
-
-        df = self.spark.createDataFrame(data)
+        
+        schema = StructType(
+            [
+                StructField("time21_5", StringType(), False),
+                StructField("type", StringType(), False),
+                StructField("catalog", StringType(), True),
+                StructField("note", StringType(), True),
+                StructField("link", StringType(), True),
+                StructField("isMostAccurate", BooleanType(), False),
+                StructField("associatedCMEID", StringType(), True),
+                StructField("latitude", FloatType(), False),
+                StructField("longitude", FloatType(), False),
+                StructField("halfAngle", FloatType(), False),
+                StructField("speed", FloatType(), False),
+            ]
+        )
+        df = self.spark.createDataFrame(data, schema)
+        
         df.printSchema()
         df.show()
 
@@ -71,10 +85,10 @@ class ETL_CME(ETL_Spark):
         df = df.withColumn("note", substring(col("note"), 0, 255))
         df = df.withColumn("link", col("link").cast("string"))
         df = df.withColumn("associatedCMEID", col("associatedCMEID").cast("string"))
-        df = df.withColumn("latitude", col("latitude").cast("int"))
-        df = df.withColumn("longitude", col("longitude").cast("int"))
-        df = df.withColumn("halfAngle", col("halfAngle").cast("int"))
-        df = df.withColumn("speed", col("speed").cast("int"))
+        df = df.withColumn("latitude", col("latitude"))
+        df = df.withColumn("longitude", col("longitude"))
+        df = df.withColumn("halfAngle", col("halfAngle"))
+        df = df.withColumn("speed", col("speed"))
 
         df.printSchema()
         df.show()

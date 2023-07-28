@@ -9,22 +9,22 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from datetime import datetime, timedelta
 
 QUERY_CREATE_TABLE = """
-create table if not exists amchavezaltamirano_coderhouse.coronal_mass_ejection(
-    datetime_event varchar(256),
-    type_event varchar(256),
-    catalog_event varchar(256),
-    date_event varchar(256),
-    time_event varchar(256),
-    note varchar(256),
-    link varchar(256),
-    isMostAccurate boolean,
-    associatedCMEID varchar(256),
-    latitude int,
-    longitude int,
-    halfAngle int,
-    speed int,
-    id int identity(1,1),
-    process_date varchar(256),
+CREATE TABLE IF NOT EXISTS amchavezaltamirano_coderhouse.coronal_mass_ejection(
+    datetime_event VARCHAR(256) NOT NULL,
+    type_event VARCHAR(256) NOT NULL,
+    catalog_event VARCHAR(256),
+    date_event VARCHAR(256),
+    time_event VARCHAR(256),
+    note VARCHAR(256),
+    link VARCHAR(256),
+    isMostAccurate BOOLEAN NOT NULL,
+    associatedCMEID VARCHAR(256),
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL,
+    halfAngle FLOAT NOT NULL,
+    speed FLOAT NOT NULL,
+    id INT IDENTITY(1,1),
+    process_date VARCHAR(256),
     primary key(id))
 distkey(process_date)
 compound sortkey(process_date);
