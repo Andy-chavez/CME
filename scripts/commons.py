@@ -12,7 +12,6 @@ REDSHIFT_URL = env["REDSHIFT_URL"]
 
 
 class ETL_Spark:
-
     DRIVER_PATH = env["DRIVER_PATH"]
     JDBC_DRIVER = "org.postgresql.Driver"
 
@@ -53,7 +52,6 @@ class ETL_Spark:
             print(">>> Connection to Redshift failed")
 
     def execute(self, process_date: str):
-
         print(">>> [execute] Ejecutando ETL...")
 
         # Extract

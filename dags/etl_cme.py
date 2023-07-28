@@ -34,6 +34,7 @@ QUERY_CLEAN_PROCESS_DATE = """
 DELETE FROM amchavezaltamirano_coderhouse.coronal_mass_ejection WHERE process_date = '{{ ti.xcom_pull(key="process_date") }}';
 """
 
+
 # create function to get process_date and push it to xcom
 def get_process_date(**kwargs):
     # If process_date is provided take it, otherwise take today
@@ -63,7 +64,6 @@ with DAG(
     schedule_interval="@weekly",
     catchup=False,
 ) as dag:
-
     get_process_date_task = PythonOperator(
         task_id="get_process_date",
         python_callable=get_process_date,
@@ -84,14 +84,14 @@ with DAG(
         sql=QUERY_CLEAN_PROCESS_DATE,
         dag=dag,
     )
-    
+
     spark_etl_cme = SparkSubmitOperator(
         task_id="spark_etl_cme",
         application="/opt/airflow/scripts/ETL_CME.py",
         conn_id="spark_default",
         dag=dag,
         driver_class_path="/tmp/drivers/postgresql-42.5.2.jar",
-        application_args = ['{{ ti.xcom_pull(key="process_date") }}']
+        application_args=['{{ ti.xcom_pull(key="process_date") }}'],
     )
 
     get_process_date_task >> create_table >> clean_process_date >> spark_etl_cme
