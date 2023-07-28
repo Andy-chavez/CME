@@ -52,12 +52,12 @@ class ETL_Spark:
         except:
             print(">>> Connection to Redshift failed")
 
-    def execute(self):
+    def execute(self, process_date: str):
 
         print(">>> [execute] Ejecutando ETL...")
 
         # Extract
-        df_api = self.extract()
+        df_api = self.extract(process_date)
 
         # Transform
         df_transformed = self.transform(df_api)
@@ -65,7 +65,7 @@ class ETL_Spark:
         # Load
         self.load(df_transformed)
 
-    def extract(self):
+    def extract(self, process_date):
         print(">>> Extracting data from API")
 
     def transform(self, df_original):

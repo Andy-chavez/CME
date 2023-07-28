@@ -12,15 +12,24 @@ class ETL_CME(ETL_Spark):
     def __init__(self, job_name=None):
         super().__init__(job_name)
         self.process_date = datetime.now().strftime("%Y-%m-%d")
+        # Pulls the return_value XCOM from "pushing_task"
+        #value = task_instance.xcom_pull(task_ids='get_process_date')
+        #print(value)
+        print(self.process_date)
 
     def run(self):
-        self.execute()
+        process_date = datetime.now().strftime("%Y-%m-%d")
+        self.execute(process_date)
 
-    def extract(self):
+    def extract(self, process_date):
         print(">>> Extracting data:")
-        today = datetime.today().strftime('%Y-%m-%d')
-        week = (datetime.today() - timedelta(days=7)).strftime('%Y-%m-%d') #look for info uploaded during previous week
-        apiCall = 'https://api.nasa.gov/DONKI/CMEAnalysis?startDate='+week+'&endDate='+today+'&mostAccurateOnly=true&speed=500&halfAngle=30&catalog=ALL&api_key=DEMO_KEY'
+        date = datetime.strptime(self.process_date, '%Y-%m-%d')
+        week = (date - timedelta(days=7)).strftime('%Y-%m-%d') #look for info uploaded during previous week
+        
+        print (date)
+        print(process_date)
+        print(self.process_date)
+        apiCall = 'https://api.nasa.gov/DONKI/CMEAnalysis?startDate='+week+'&endDate='+self.process_date+'&mostAccurateOnly=true&speed=500&halfAngle=30&catalog=ALL&api_key=DEMO_KEY'
         print(">>Executing api call -> "+ apiCall)
         result = requests.get(apiCall)
         #handle api response
@@ -49,10 +58,8 @@ class ETL_CME(ETL_Spark):
         df = df.withColumnRenamed('time21_5','datetime_event')
         df = df.withColumnRenamed('type','type_event')
         df = df.withColumnRenamed('catalog','catalog_event')
-        df = df.withColumn('date_event', dateUDF(df.datetime_event))
-        df = df.withColumn('time_event', timeUDF(df.datetime_event))
-        df = df.withColumn('datetime_event', col('datetime_event').cast('string'))
-        df = df.withColumn('datetime_event', col('datetime_event').cast('string'))
+        df = df.withColumn('date_event', dateUDF(df.datetime_event).cast('string'))
+        df = df.withColumn('time_event', timeUDF(df.datetime_event).cast('string'))
         df = df.withColumn('datetime_event', col('datetime_event').cast('string'))
         df = df.withColumn('note', substring(col("note"),0,255))
         df = df.withColumn('type_event', col('type_event').cast('string'))
@@ -71,6 +78,10 @@ class ETL_CME(ETL_Spark):
 
     def load(self, df_final):
         print(">>> Loading data into redshift:")
+
+        # add process_date column
+        df_final = df_final.withColumn("process_date", lit(self.process_date))
+
 
         df_final.write \
             .format("jdbc") \
