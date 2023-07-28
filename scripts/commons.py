@@ -57,7 +57,7 @@ class ETL_Spark:
         print(">>> [execute] Ejecutando ETL...")
 
         # Extract
-        df_api = self.extract(process_date)
+        df_api = self.extract()
 
         # Transform
         df_transformed = self.transform(df_api)
@@ -65,7 +65,7 @@ class ETL_Spark:
         # Load
         self.load(df_transformed)
 
-    def extract(self, process_date):
+    def extract(self):
         print(">>> Extracting data from API")
 
     def transform(self, df_original):

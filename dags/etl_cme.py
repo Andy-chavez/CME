@@ -11,23 +11,23 @@ from datetime import datetime, timedelta
 QUERY_CREATE_TABLE = """
 create table if not exists amchavezaltamirano_coderhouse.coronal_mass_ejection(
     datetime_event varchar(256),
+    type_event varchar(256),
+    catalog_event varchar(256),
+    date_event varchar(256),
+    time_event varchar(256),
+    note varchar(256),
+    link varchar(256),
+    isMostAccurate boolean,
+    associatedCMEID varchar(256),
     latitude int,
     longitude int,
     halfAngle int,
     speed int,
-    type_event varchar(256),
-    isMostAccurate boolean,
-    associatedCMEID varchar(256),
-    note varchar(256),
-    catalog_event varchar(256),
-    link varchar(256),
-    date_event varchar(256),
-    time_event varchar(256),
     id int identity(1,1),
     process_date varchar(256),
     primary key(id))
 distkey(process_date)
-compound sortkey(id, date_event,time_event);
+compound sortkey(process_date);
 """
 
 QUERY_CLEAN_PROCESS_DATE = """
@@ -88,10 +88,10 @@ with DAG(
     spark_etl_cme = SparkSubmitOperator(
         task_id="spark_etl_cme",
         application="/opt/airflow/scripts/ETL_CME.py",
-        # application_args='{{ ti.xcom_pull(task_ids=[\'get_process_date\']) }}',
         conn_id="spark_default",
         dag=dag,
         driver_class_path="/tmp/drivers/postgresql-42.5.2.jar",
+        application_args = ['{{ ti.xcom_pull(key="process_date") }}']
     )
 
     get_process_date_task >> create_table >> clean_process_date >> spark_etl_cme

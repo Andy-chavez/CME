@@ -1,5 +1,6 @@
 import requests
 import json
+import sys
 from datetime import datetime, timedelta
 from os import environ as env
 
@@ -11,24 +12,19 @@ from commons import ETL_Spark
 class ETL_CME(ETL_Spark):
     def __init__(self, job_name=None):
         super().__init__(job_name)
-        self.process_date = datetime.now().strftime("%Y-%m-%d")
-        # Pulls the return_value XCOM from "pushing_task"
-        #value = task_instance.xcom_pull(task_ids='get_process_date')
-        #print(value)
+        self.process_date = sys.argv[1]
         print(self.process_date)
 
     def run(self):
-        process_date = datetime.now().strftime("%Y-%m-%d")
-        self.execute(process_date)
+        self.execute(self.process_date)
 
-    def extract(self, process_date):
+    def extract(self):
         print(">>> Extracting data:")
         date = datetime.strptime(self.process_date, '%Y-%m-%d')
         week = (date - timedelta(days=7)).strftime('%Y-%m-%d') #look for info uploaded during previous week
         
         print (date)
-        print(process_date)
-        print(self.process_date)
+        print(week)
         apiCall = 'https://api.nasa.gov/DONKI/CMEAnalysis?startDate='+week+'&endDate='+self.process_date+'&mostAccurateOnly=true&speed=500&halfAngle=30&catalog=ALL&api_key=DEMO_KEY'
         print(">>Executing api call -> "+ apiCall)
         result = requests.get(apiCall)
@@ -39,7 +35,7 @@ class ETL_CME(ETL_Spark):
             print(data)
         else:
             data = []
-            raise Exception(f"Error retrieving data, status code: {response.status_code}")           
+            raise Exception(f"Error retrieving data, status code: {result.status_code}")           
 
         df = self.spark.createDataFrame(data)
         df.printSchema()
@@ -56,14 +52,14 @@ class ETL_CME(ETL_Spark):
         df = df_original.dropna()
         df = df.dropDuplicates(['time21_5'])
         df = df.withColumnRenamed('time21_5','datetime_event')
+        df = df.withColumn('datetime_event', col('datetime_event').cast('string'))
         df = df.withColumnRenamed('type','type_event')
+        df = df.withColumn('type_event', col('type_event').cast('string'))
         df = df.withColumnRenamed('catalog','catalog_event')
+        df = df.withColumn('catalog_event', col('catalog_event').cast('string'))
         df = df.withColumn('date_event', dateUDF(df.datetime_event).cast('string'))
         df = df.withColumn('time_event', timeUDF(df.datetime_event).cast('string'))
-        df = df.withColumn('datetime_event', col('datetime_event').cast('string'))
         df = df.withColumn('note', substring(col("note"),0,255))
-        df = df.withColumn('type_event', col('type_event').cast('string'))
-        df = df.withColumn('catalog_event', col('catalog_event').cast('string'))
         df = df.withColumn('link', col('link').cast('string'))
         df = df.withColumn('associatedCMEID', col('associatedCMEID').cast('string'))
         df = df.withColumn('latitude', col('latitude').cast('int'))
@@ -71,6 +67,7 @@ class ETL_CME(ETL_Spark):
         df = df.withColumn('halfAngle', col('halfAngle').cast('int'))
         df = df.withColumn('speed', col('speed').cast('int'))
 
+        
         df.printSchema()
         df.show()
 
@@ -82,7 +79,6 @@ class ETL_CME(ETL_Spark):
         # add process_date column
         df_final = df_final.withColumn("process_date", lit(self.process_date))
 
-
         df_final.write \
             .format("jdbc") \
             .option("url", env['REDSHIFT_URL']) \
@@ -90,7 +86,7 @@ class ETL_CME(ETL_Spark):
             .option("user", env['REDSHIFT_USER']) \
             .option("password", env['REDSHIFT_PASSWORD']) \
             .option("driver", "org.postgresql.Driver") \
-            .mode("overwrite") \
+            .mode("append") \
             .save()
         
         print(">>> Data loaded succesfully")
