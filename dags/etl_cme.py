@@ -1,6 +1,6 @@
 # DAG
 
-from airflow import DAG
+from airflow.models import DAG, Variable
 
 from airflow.operators.python_operator import PythonOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator

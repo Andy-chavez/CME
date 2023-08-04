@@ -1,6 +1,7 @@
 from os import environ as env
 from psycopg2 import connect
 from pyspark.sql import SparkSession
+from airflow.models import Variable
 
 # env variables
 REDSHIFT_HOST = env["REDSHIFT_HOST"]
@@ -9,6 +10,46 @@ REDSHIFT_DB = env["REDSHIFT_DB"]
 REDSHIFT_USER = env["REDSHIFT_USER"]
 REDSHIFT_PASSWORD = env["REDSHIFT_PASSWORD"]
 REDSHIFT_URL = env["REDSHIFT_URL"]
+
+email_success = "[OK] CME ETL finished successfully"
+email_failure = "[ERROR] CME ETL"
+
+import smtplib
+
+
+def send_error():
+    send_email(email_failure, f"DAG finished with status: {email_failure}")
+
+
+def send_success():
+    send_email(email_success, f"DAG finished with status: {email_success}")
+
+
+def send_email(subject, body_text):
+    try:
+        x = smtplib.SMTP("smtp.gmail.com", 587)
+        x.starttls()
+        x.login(Variable.get("SMTP_EMAIL_FROM"), Variable.get("SMTP_PASSWORD"))
+        message = "Subject: {}\n\n{}".format(subject, body_text)
+        x.sendmail(
+            Variable.get("SMTP_EMAIL_FROM"), Variable.get("SMTP_EMAIL_TO"), message
+        )
+        print("Email sent")
+    except Exception as exception:
+        print(exception)
+        print("Error sending email")
+
+
+def check_max_speed(df):
+    max_speed = Variable.get("CME_MAX_SPEED")
+    temp_df = df.filter(df.speed > max_speed)
+    if temp_df.count() > 0:
+        subject = "CME ETL MAX SPEED EXCEEDED"
+        body_text = f"Max speed of {max_speed} for records {temp_df}"
+        send_email(subject, body_text)
+    temp_df.show()
+    print(temp_df.count())
+    print("***************************************************************")
 
 
 class ETL_Spark:

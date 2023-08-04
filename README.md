@@ -42,8 +42,16 @@ docker-compose up --build
     * Host: `spark://spark`
     * Port: `7077`
     * Extra: `{"queue": "default"}`
-8. In `Admin -> Variables` create a new variable with the following details:
+8. In `Admin -> Variables` create the following new variables with details:
     * Key: `driver_class_path`
     * Value: `/tmp/drivers/postgresql-42.5.2.jar`
+    * Key: `SMTP_EMAIL_FROM`
+    * Value: `enter your email here`
+    * Key: `SMTP_EMAIL_TO`
+    * Value: `enter your email here`
+    * Key: `SMTP_PASSWORD`
+    * Value: `enter the password that you got from the gmail´s web page of the sender´s email`
+    * Key: `CME_MAX_SPEEDv`
+    * Value: `enter an integer value, we recommend something in between 200 and 500`
 9. Execute DAG `etl_cme`.
 10. To check that the data is also in the db, you can execute "select * from amchavezaltamirano_coderhouse.coronal_mass_ejection;"

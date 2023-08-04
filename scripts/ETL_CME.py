@@ -5,9 +5,15 @@ from datetime import datetime, timedelta
 from os import environ as env
 
 from pyspark.sql.functions import col, lit, udf, substring
-from pyspark.sql.types import StringType, FloatType, BooleanType, StructType, StructField
+from pyspark.sql.types import (
+    StringType,
+    FloatType,
+    BooleanType,
+    StructType,
+    StructField,
+)
 
-from commons import ETL_Spark
+from commons import ETL_Spark, send_error, send_success, check_max_speed
 
 
 class ETL_CME(ETL_Spark):
@@ -42,8 +48,9 @@ class ETL_CME(ETL_Spark):
             print(data)
         else:
             data = []
+            send_error()
             raise Exception(f"Error retrieving data, status code: {result.status_code}")
-        
+
         schema = StructType(
             [
                 StructField("time21_5", StringType(), False),
@@ -60,7 +67,7 @@ class ETL_CME(ETL_Spark):
             ]
         )
         df = self.spark.createDataFrame(data, schema)
-        
+
         df.printSchema()
         df.show()
 
@@ -89,7 +96,7 @@ class ETL_CME(ETL_Spark):
         df = df.withColumn("longitude", col("longitude"))
         df = df.withColumn("halfAngle", col("halfAngle"))
         df = df.withColumn("speed", col("speed"))
-
+        check_max_speed(df)
         df.printSchema()
         df.show()
 
@@ -112,6 +119,7 @@ class ETL_CME(ETL_Spark):
         ).save()
 
         print(">>> Data loaded succesfully")
+        send_success()
 
 
 # some auxiliary functions
