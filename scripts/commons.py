@@ -41,16 +41,17 @@ def send_email(subject, body_text):
 
 
 def check_max_speed(df):
-    max_speed = Variable.get("CME_MAX_SPEED")
-    temp_df = df.filter(df.speed > max_speed)
-    if temp_df.count() > 0:
-        subject = "CME ETL MAX SPEED EXCEEDED"
-        body_text = f"Max speed of {max_speed} for records {temp_df}"
-        send_email(subject, body_text)
-    temp_df.show()
-    print(temp_df.count())
-    print("***************************************************************")
+    check_max_number(df, "CME_MAX_SPEED", "CME ETL MAX SPEED EXCEEDED", "Max speed" )
 
+def check_max_half_angle(df):
+    check_max_number(df, "CME_MAX_HALF_ANGLE", "CME ETL MAX HALF ANGLE EXCEEDED", "Max half angle" )
+
+def check_max_number(df, variable, subject, body_part):
+    max = Variable.get(variable)
+    temp_df = df.filter(df.speed > max)
+    if temp_df.count() > 0:
+        body_text = f"{body_part} of {max} exceeded for {temp_df.count()} record(s)"
+        send_email(subject, body_text)
 
 class ETL_Spark:
     DRIVER_PATH = env["DRIVER_PATH"]

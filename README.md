@@ -51,7 +51,9 @@ docker-compose up --build
     * Value: `enter your email here`
     * Key: `SMTP_PASSWORD`
     * Value: `enter the password that you got from the gmail´s web page of the sender´s email`
-    * Key: `CME_MAX_SPEEDv`
+    * Key: `CME_MAX_SPEED`
     * Value: `enter an integer value, we recommend something in between 200 and 500`
+    * Key: `CME_MAX_HALF_ANGLE`
+    * Value: `enter an integer value, we recommend something in between 30 and 50`
 9. Execute DAG `etl_cme`.
 10. To check that the data is also in the db, you can execute "select * from amchavezaltamirano_coderhouse.coronal_mass_ejection;"
